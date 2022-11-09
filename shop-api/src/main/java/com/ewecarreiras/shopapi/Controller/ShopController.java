@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.ewecarreiras.shopapi.dto.ShopDto;
 import com.ewecarreiras.shopapi.entity.Shop;
 import com.ewecarreiras.shopapi.entity.ShopItem;
+import com.ewecarreiras.shopapi.event.KafkaClient;
 import com.ewecarreiras.shopapi.repository.ShopRepository;
 
 import lombok.RequiredArgsConstructor;
@@ -24,6 +25,7 @@ import lombok.RequiredArgsConstructor;
 public class ShopController {
 
     private final ShopRepository shopRepository;
+    private final KafkaClient kafkaClient;
 
     @GetMapping
     public List<ShopDto> getShop() {
@@ -37,11 +39,13 @@ public class ShopController {
     public ShopDto saveShop(@RequestBody ShopDto shopDto) {
         shopDto.setIdentifier(UUID.randomUUID().toString());
         shopDto.setDateShop(LocalDate.now());
-        shopDto.setStatus("PENDING");
+        // shopDto.setStatus("PENDING");
         Shop shop = Shop.convert(shopDto);
         for (ShopItem shopItem : shop.getItems()) {
             shopItem.setShop(shop);
         }
+        shopDto = ShopDto.convert(shopRepository.save(shop));
+        kafkaClient.sendMessage(shopDto);
         return ShopDto.convert(shopRepository.save(shop));
     }
 }
