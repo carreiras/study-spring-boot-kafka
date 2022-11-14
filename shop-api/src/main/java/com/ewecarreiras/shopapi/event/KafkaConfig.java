@@ -43,6 +43,9 @@ public class KafkaConfig {
 
     public ConsumerFactory<String, ShopDto> consumerFactory() {
         JsonDeserializer<ShopDto> deserializer = new JsonDeserializer<>(ShopDto.class);
+        deserializer.setRemoveTypeHeaders(false);
+        deserializer.addTrustedPackages("com.ewecarreiras.shopapi.dto.ShopDto");
+        deserializer.setUseTypeMapperForKey(true);
         Map<String, Object> props = new HashMap<>();
         props.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapAddress);
         return new DefaultKafkaConsumerFactory<>(props, new StringDeserializer(), deserializer);
